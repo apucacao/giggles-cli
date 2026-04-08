@@ -9,7 +9,7 @@ use std::path::Path;
 use std::time::Instant;
 
 #[derive(Parser)]
-#[command(name = "giggles", about = "Upload GIFs, videos, and tweets to Giggles")]
+#[command(name = "giggles", about = "The tool for Giggles librarians", version)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
