@@ -95,7 +95,7 @@ async fn main() -> Result<()> {
                 match import::import_one(input, &cfg).await {
                     Ok(_) => {
                         let elapsed = started.elapsed().as_secs_f64();
-                        shell::status("Imported", format!("`{input}` in {elapsed:.2}s"));
+                        shell::status("Imported", format!("{input} in {elapsed:.2}s"));
                     }
                     Err(e) => {
                         eprintln!("{}", shell::format_error("Failed", e));
