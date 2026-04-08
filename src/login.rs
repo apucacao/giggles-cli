@@ -1,4 +1,4 @@
-use crate::config::{Config, save_config};
+use crate::config::{save_config, Config};
 use crate::shell;
 use anyhow::{Context, Result};
 use reqwest::Client;
@@ -54,10 +54,7 @@ pub async fn run(server: &str) -> Result<()> {
 
     shell::status(
         "Waiting",
-        format!(
-            "confirm code {} in your browser",
-            request.user_code
-        ),
+        format!("confirm code {} in your browser", request.user_code),
     );
 
     // 3. Poll until approved, expired, or timed out
