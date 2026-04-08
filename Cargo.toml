@@ -1,0 +1,33 @@
+[package]
+name = "giggles"
+version = "0.1.0"
+edition = "2021"
+description = "The tool for Giggles librarians"
+repository = "https://github.com/apucacao/giggles-cli"
+license = "MIT"
+
+[[bin]]
+name = "giggles"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+anstream = "1"
+anstyle = "1"
+bytes = "1"
+clap = { version = "4", features = ["derive"] }
+dirs = "5"
+open = "5"
+futures-util = "0.3"
+indicatif = "0.17"
+reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+url = "2"
+uuid = { version = "1", features = ["v4"] }
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
