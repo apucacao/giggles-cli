@@ -22,3 +22,15 @@ pub fn error(message: impl std::fmt::Display) {
     let mut err = anstream::stderr();
     let _ = writeln!(err, "{ERROR}error{ERROR:#}: {message}");
 }
+
+pub fn format_status(label: &str, message: impl std::fmt::Display) -> String {
+    format!("{HEADER}{label:>12}{HEADER:#} {message}")
+}
+
+pub fn format_warn(label: &str, message: impl std::fmt::Display) -> String {
+    format!("{WARN}{label:>12}{WARN:#} {message}")
+}
+
+pub fn format_error(label: &str, message: impl std::fmt::Display) -> String {
+    format!("{ERROR}{label:>12}{ERROR:#} {message}")
+}

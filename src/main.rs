@@ -8,8 +8,14 @@ use clap::{Parser, Subcommand};
 use std::path::Path;
 use std::time::Instant;
 
+const VERSION: &str = if cfg!(debug_assertions) {
+    "dev"
+} else {
+    env!("CARGO_PKG_VERSION")
+};
+
 #[derive(Parser)]
-#[command(name = "giggles", about = "The tool for Giggles librarians", version)]
+#[command(name = "giggles", about = "The tool for Giggles librarians", version = VERSION)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -24,14 +30,19 @@ enum Commands {
         server: String,
     },
 
-    /// Upload a GIF, video, or tweet URL
+    /// Upload one or more GIFs, videos, or tweet URLs
     Upload {
-        /// File path or URL to upload
-        input: String,
+        /// File paths or URLs to upload
+        #[arg(required = true)]
+        inputs: Vec<String>,
 
         /// Comma-separated tags (required)
         #[arg(long, value_delimiter = ',', required = true)]
         tags: Vec<String>,
+
+        /// Number of concurrent uploads in batch mode (default: 5)
+        #[arg(long, short = 'c', default_value = "5")]
+        concurrency: usize,
     },
 
     /// Show the authenticated user
@@ -64,7 +75,11 @@ async fn main() -> Result<()> {
             shell::status("Logged in", email);
         }
 
-        Commands::Upload { input, tags } => {
+        Commands::Upload {
+            inputs,
+            tags,
+            concurrency,
+        } => {
             let tags: Vec<String> = tags
                 .into_iter()
                 .map(|t| t.trim().to_string())
@@ -76,15 +91,21 @@ async fn main() -> Result<()> {
             }
 
             let cfg = config::load_config()?;
-            let name = Path::new(&input)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or(&input)
-                .to_string();
-            let started = Instant::now();
-            upload::upload_gif(&input, &tags, &cfg).await?;
-            let elapsed = started.elapsed().as_secs_f64();
-            shell::status("Uploaded", format!("`{name}` in {elapsed:.2}s"));
+
+            if inputs.len() == 1 {
+                let input = &inputs[0];
+                let name = Path::new(input)
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or(input)
+                    .to_string();
+                let started = Instant::now();
+                upload::upload_gif(input, &tags, &cfg).await?;
+                let elapsed = started.elapsed().as_secs_f64();
+                shell::status("Uploaded", format!("`{name}` in {elapsed:.2}s"));
+            } else {
+                upload::upload_batch(inputs, tags, cfg, concurrency).await;
+            }
         }
     }
 

@@ -4,6 +4,10 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
+#[cfg(debug_assertions)]
+const DEFAULT_SERVER: &str = "http://localhost:3000";
+
+#[cfg(not(debug_assertions))]
 const DEFAULT_SERVER: &str = "https://gggl.es";
 
 #[derive(Serialize, Deserialize, Default)]
