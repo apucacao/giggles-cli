@@ -1,4 +1,4 @@
-use crate::config::{save_config, Config};
+use crate::config::save_config;
 use crate::shell;
 use anyhow::{Context, Result};
 use reqwest::Client;
@@ -82,8 +82,8 @@ pub async fn run(server: &str) -> Result<()> {
         match poll.status.as_str() {
             "approved" => {
                 let api_key = poll.api_key.context("Server approved but sent no key")?;
-                let server = server.trim_end_matches('/').to_string();
-                save_config(&Config { server, api_key })?;
+                let server = server.trim_end_matches('/');
+                save_config(server, &api_key)?;
                 shell::status("Authorized", "you're all set");
                 return Ok(());
             }
