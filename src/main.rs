@@ -1,4 +1,5 @@
 mod config;
+mod import;
 mod login;
 mod shell;
 mod upload;
@@ -45,6 +46,17 @@ enum Commands {
         concurrency: usize,
     },
 
+    /// Import one or more GIFs, videos, or tweet URLs into staging (no tags required)
+    Import {
+        /// File paths or URLs to import
+        #[arg(required = true)]
+        inputs: Vec<String>,
+
+        /// Number of concurrent imports in batch mode (default: 5)
+        #[arg(long, short = 'c', default_value = "5")]
+        concurrency: usize,
+    },
+
     /// Show the authenticated user
     Whoami,
 }
@@ -73,6 +85,26 @@ async fn main() -> Result<()> {
             let body: serde_json::Value = res.json().await.context("Invalid response")?;
             let email = body["email"].as_str().unwrap_or("unknown");
             shell::status("Logged in", email);
+        }
+
+        Commands::Import { inputs, concurrency } => {
+            let cfg = config::load_config()?;
+            if inputs.len() == 1 {
+                let input = &inputs[0];
+                let started = Instant::now();
+                match import::import_one(input, &cfg).await {
+                    Ok(_) => {
+                        let elapsed = started.elapsed().as_secs_f64();
+                        shell::status("Imported", format!("`{input}` in {elapsed:.2}s"));
+                    }
+                    Err(e) => {
+                        eprintln!("{}", shell::format_error("Failed", e));
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                import::import_batch(inputs, cfg, concurrency).await;
+            }
         }
 
         Commands::Upload {
