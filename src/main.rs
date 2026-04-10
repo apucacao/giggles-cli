@@ -87,7 +87,10 @@ async fn main() -> Result<()> {
             shell::status("Logged in", email);
         }
 
-        Commands::Import { inputs, concurrency } => {
+        Commands::Import {
+            inputs,
+            concurrency,
+        } => {
             let cfg = config::load_config()?;
             if inputs.len() == 1 {
                 let input = &inputs[0];

@@ -94,20 +94,17 @@ async fn resolve_input(
             )));
         }
 
-        let tweet: ImportTweetResponse = res
-            .json()
-            .await
-            .map_err(|e| ResolveError::Fail(anyhow::anyhow!("Invalid import-tweet response: {e}")))?;
+        let tweet: ImportTweetResponse = res.json().await.map_err(|e| {
+            ResolveError::Fail(anyhow::anyhow!("Invalid import-tweet response: {e}"))
+        })?;
 
         let video_url = tweet.video_url;
         if verbose {
             shell::status("Downloading", &video_url);
         }
-        let res = client
-            .get(&video_url)
-            .send()
-            .await
-            .map_err(|e| ResolveError::Fail(anyhow::anyhow!("Failed to download tweet video: {e}")))?;
+        let res = client.get(&video_url).send().await.map_err(|e| {
+            ResolveError::Fail(anyhow::anyhow!("Failed to download tweet video: {e}"))
+        })?;
         if !res.status().is_success() {
             return Err(ResolveError::Fail(anyhow::anyhow!(
                 "Failed to download video: {}",
@@ -167,7 +164,9 @@ async fn resolve_input(
     // Local file
     let path = Path::new(input);
     if !path.exists() {
-        return Err(ResolveError::Fail(anyhow::anyhow!("File not found: {input}")));
+        return Err(ResolveError::Fail(anyhow::anyhow!(
+            "File not found: {input}"
+        )));
     }
     let ext = path
         .extension()
