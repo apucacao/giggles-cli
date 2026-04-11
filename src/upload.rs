@@ -233,8 +233,7 @@ async fn prepare_upload(
         );
     }
 
-    let resp: PrepareResponse =
-        serde_json::from_value(body).context("Invalid prepare response")?;
+    let resp: PrepareResponse = serde_json::from_value(body).context("Invalid prepare response")?;
     Ok(resp.short_id)
 }
 
