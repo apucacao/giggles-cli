@@ -219,9 +219,13 @@ async fn prepare_upload(
         .await
         .context("Failed to call /api/upload/prepare")?;
 
-    if !res.status().is_success() {
-        let status = res.status();
-        let body: serde_json::Value = res.json().await.unwrap_or_default();
+    let status = res.status();
+    let body: serde_json::Value = res.json().await.unwrap_or_default();
+    if status == 409 {
+        let existing_id = body["shortId"].as_str().unwrap_or("?");
+        anyhow::bail!("already imported as {existing_id}");
+    }
+    if !status.is_success() {
         anyhow::bail!(
             "Prepare failed {}: {}",
             status,
@@ -229,7 +233,8 @@ async fn prepare_upload(
         );
     }
 
-    let resp: PrepareResponse = res.json().await.context("Invalid prepare response")?;
+    let resp: PrepareResponse =
+        serde_json::from_value(body).context("Invalid prepare response")?;
     Ok(resp.short_id)
 }
 
@@ -373,7 +378,14 @@ async fn run_pipeline(
     }
     let short_id = prepare_upload(tags, resolved.source.as_deref(), config, client)
         .await
-        .map_err(|e| PipelineError::Fail(e.to_string()))?;
+        .map_err(|e| {
+            let msg = e.to_string();
+            if msg.starts_with("already imported as") {
+                PipelineError::Skip(msg)
+            } else {
+                PipelineError::Fail(msg)
+            }
+        })?;
 
     let pathname = format!("{short_id}/{}", resolved.filename);
     let client_payload = serde_json::to_string(&json!({ "shortId": short_id, "size": size }))
